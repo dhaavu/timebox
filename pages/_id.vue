@@ -6,12 +6,14 @@
         <div class="task">task 2</div>
         <div class="task">task 3</div>
       </div>
-
+      <p v-if="$fetchState.pending">Fetching mountains...</p>
+    <p v-else-if="$fetchState.error">An error occurred :(</p>
+    <div v-else>
       <div class="container timeline">
         <toolbar @timelineChanged="timelineChange"></toolbar>
         <div class="timeslots">
           <div
-            v-for="slot in slots"
+            v-for="slot in pageData[0].slots"
             :key="slot.id"
             :id="slot.id"
             class="slotContainer"
@@ -28,9 +30,11 @@
         </div>
       </div>
     </div>
+    </div>
     <div class="console">
-      {{data.filter(day => day.day == today )}}
+    
    </div>
+   <div>{{pageData}}</div>
   </div>
 </template>
 
@@ -48,11 +52,31 @@ export default {
     el2.forEach((item) => {
       Sortable.create(item, { group: "hello" });
     });
+ //   this.getData()
+ //  this.getPageData()
+  
   },
+  async fetch(){
+    const loadData = await new Promise(function(resolve, reject ){
+      try{
+         this.getData(); 
+      this.getPageData(); 
+      console.log(this.pageData)
+      resolve("OK"); 
+      }
+      catch(e){
+        reject(e);  
+      }
+     
+
+    })
+  }, 
   data() {
     return {
+      id:'', 
       data:[{}], 
       today: "", 
+      pageData: {}, 
       slots: [
         {
           id: "1",
@@ -76,21 +100,6 @@ export default {
         },
       ],
     };
-  },
-  mounted(){
-    const dates = this.getDatesBetween(new Date(2023,0,1), new Date(2023,11,31))
-    console.log(dates); 
-    var todaysDate = new Date(); 
-    this.today = (todaysDate.getMonth() +1 ) + '/' + todaysDate.getDate() + '/' + todaysDate.getFullYear();  
-    var slotsArr=[]
-    for (var i=0; i<25; i++)
-    {
-        slotsArr.push(i+1); 
-    }
-    dates.forEach((date)=> {
-      var slot = {"day": (date.getMonth() +1) + "/" + date.getDate() +  "/" + date.getFullYear() , "slots": slotsArr}
-      this.data.push(slot)
-    })
   }, 
   methods: {
     timelineChange() {
@@ -118,8 +127,56 @@ export default {
 
     return dates;
     }, 
-    getPageData(currentDate){
-      
+    getPageData(){
+      var date = this.$route.params.id; 
+      date = date.substring(0,2) + '/' + date.substring(2,4) + '/' + date.substring(4,8); 
+      this.id = date; 
+      this.pageData = this.data.filter(day => day.day == date); 
+    
+    }, 
+     toHoursAndMinutes(totalMinutes) {
+        var hours = Math.floor(totalMinutes / 60);
+        var minutes = totalMinutes % 60;
+        if(hours > 12){
+          hours = Math.floor(hours/12)
+          return hours + ':' + minutes + "PM";
+        }
+        if(hours <10){
+          return '0' + hours + ':' + minutes + "AM";
+        }
+         
+        
+    }, 
+    getData(){
+    const dates = this.getDatesBetween(new Date(2023,0,1), new Date(2023,11,31))
+    console.log(dates); 
+    var todaysDate = new Date(); 
+    var todayDay = todaysDate.getDate(); 
+    if (todayDay <10) 
+    todayDay = "0" + todayDay 
+    var todayMonth = todaysDate.getMonth() +1; 
+    if (todayMonth <10) 
+    todayMonth = "0" + todayMonth 
+    this.today = todayMonth + '/' + todayDay + '/' + todaysDate.getFullYear();  
+    var slotsArr=[]
+    var start = 0; 
+    for (var i=0; i<48; i++)
+    {
+        var slot = {"id": i+1, "start":start , "end": start+30}; 
+        slotsArr.push(slot); 
+        start = start+30; 
+    }
+    dates.forEach((date)=> {
+      var month= date.getMonth() +1; 
+      if(month <10) 
+      month = "0" + month;  
+      var day= date.getDate() +1; 
+      if(day <10) 
+      day = "0" + day; 
+      var slot = {"day": month + "/" + date.getDate() +  "/" + date.getFullYear() , "slots": slotsArr}
+      this.data.push(slot)
+    })
+    this.id = this.$route.params.id; 
     }
   },
 };
