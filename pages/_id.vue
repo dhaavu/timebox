@@ -6,19 +6,19 @@
         <div class="task">task 2</div>
         <div class="task">task 3</div>
       </div>
-      <p v-if="$fetchState.pending">Fetching mountains...</p>
-    <p v-else-if="$fetchState.error">An error occurred :(</p>
-    <div v-else>
       <div class="container timeline">
-        <toolbar @timelineChanged="timelineChange"></toolbar>
-        <div class="timeslots">
+        <div class="timeslots" v-if="pageData.length > 0">
           <div
-            v-for="slot in pageData[0].slots"
+            v-for="(slot, index) in pageData[0].slots"
             :key="slot.id"
             :id="slot.id"
             class="slotContainer"
+            :ref="'scrollToslot' + index"
           >
-            <div class="interval">{{ slot.start }} - {{ slot.end }} am</div>
+            <div class="interval">
+              {{ toHoursAndMinutes(slot.start) }} -
+              {{ toHoursAndMinutes(slot.end) }}
+            </div>
             <div class="slot">
               <div ref="draggableContainer2" class="timeslot"></div>
               <div class="controls">
@@ -28,55 +28,77 @@
             </div>
           </div>
         </div>
+        <div v-else>
+          <h3>Date Not found </h3>
+          
+        </div>
       </div>
     </div>
-    </div>
-    <div class="console">
-    
-   </div>
-   <div>{{pageData}}</div>
   </div>
+  <!-- <div class="console"></div>
+  </div> -->
 </template>
 
 <script>
 import Sortable from "sortablejs";
 import timeline from "../components/timeline.vue";
+import { createClient } from "@supabase/supabase-js";
 export default {
   components: { timeline },
   name: "IndexPage",
-  mounted() {
-    var el = this.$refs.draggableContainer1;
-    var sortable = Sortable.create(el, { group: "hello" });
-    var el2 = this.$refs.draggableContainer2;
-    console.log(el2);
-    el2.forEach((item) => {
-      Sortable.create(item, { group: "hello" });
-    });
- //   this.getData()
- //  this.getPageData()
-  
-  },
-  async fetch(){
-    const loadData = await new Promise(function(resolve, reject ){
-      try{
-         this.getData(); 
-      this.getPageData(); 
-      console.log(this.pageData)
-      resolve("OK"); 
-      }
-      catch(e){
-        reject(e);  
-      }
-     
 
-    })
-  }, 
+  async fetch() {
+    var id = this.$route.params.id;
+
+    if (id.length != 8 || id.match(/^[0-9]+$/) == null) {
+      console.log("error");
+      this.dateNotFound = true;
+    }
+
+    var currentDt =
+      id.substring(0, 2) + "/" + id.substring(2, 4) + "/" + id.substring(4, 8);
+    //  var currentDt = this.getformattedDt(new Date());
+    //  console.log(currentDt)
+    const supabase = createClient(
+      "https://ssviefrcxhjtuosoevlf.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzdmllZnJjeGhqdHVvc29ldmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzQyMzAxMzQsImV4cCI6MTk4OTgwNjEzNH0.eeQUivtYPSd__AgkywoS18N8KiDAD1Jr3jq_P8xIXTc"
+    );
+    const { data: day, error } = await supabase
+      .from("day")
+      .select("*, slots(*)")
+      .eq("name", currentDt)
+      .order("start", { foreignTable: "slots", asc: true });
+    //   console.log(JSON.stringify(day), error);
+
+    this.pageData = day;
+  },
+
+  mounted() {
+    if (this.dateNotFound == true) {
+      this.$router.push("/notfound/404");
+    } else {
+      var el = this.$refs.draggableContainer1;
+      var sortable = Sortable.create(el, { group: "hello" });
+      var el2 = this.$refs.draggableContainer2;
+      //console.log(el2);
+      if (el2) {
+        el2.forEach((item) => {
+          Sortable.create(item, { group: "hello" });
+        });
+        var el3 = this.$refs.scrollToslot20[0];
+        el3.scrollIntoView({ block: "nearest", inline: "start" });
+        console.log(el3);
+        window.scrollTo(0, 0);
+      }
+    }
+  },
   data() {
     return {
-      id:'', 
-      data:[{}], 
-      today: "", 
-      pageData: {}, 
+      id: "",
+      data: [{}],
+      today: "",
+      pageData: [{}],
+      dateNotFound: false,
       slots: [
         {
           id: "1",
@@ -100,84 +122,36 @@ export default {
         },
       ],
     };
-  }, 
+  },
   methods: {
     timelineChange() {
       console.log("Coming from the index page " + this.$store.state.timeslot);
     },
-    getDatesBetween(startDate, endDate){
-    const dates = [];
-
-    // Strip hours minutes seconds etc.
-    let currentDate = new Date(
-        startDate.getFullYear(),
-        startDate.getMonth(),
-        startDate.getDate()
-    );
-
-    while (currentDate <= endDate) {
-        dates.push(currentDate);
-
-        currentDate = new Date(
-            currentDate.getFullYear(),
-            currentDate.getMonth(),
-            currentDate.getDate() + 1, // Will increase month if over range
-        );
-    }
-
-    return dates;
-    }, 
-    getPageData(){
-      var date = this.$route.params.id; 
-      date = date.substring(0,2) + '/' + date.substring(2,4) + '/' + date.substring(4,8); 
-      this.id = date; 
-      this.pageData = this.data.filter(day => day.day == date); 
-    
-    }, 
-     toHoursAndMinutes(totalMinutes) {
-        var hours = Math.floor(totalMinutes / 60);
-        var minutes = totalMinutes % 60;
-        if(hours > 12){
-          hours = Math.floor(hours/12)
-          return hours + ':' + minutes + "PM";
-        }
-        if(hours <10){
-          return '0' + hours + ':' + minutes + "AM";
-        }
-         
-        
-    }, 
-    getData(){
-    const dates = this.getDatesBetween(new Date(2023,0,1), new Date(2023,11,31))
-    console.log(dates); 
-    var todaysDate = new Date(); 
-    var todayDay = todaysDate.getDate(); 
-    if (todayDay <10) 
-    todayDay = "0" + todayDay 
-    var todayMonth = todaysDate.getMonth() +1; 
-    if (todayMonth <10) 
-    todayMonth = "0" + todayMonth 
-    this.today = todayMonth + '/' + todayDay + '/' + todaysDate.getFullYear();  
-    var slotsArr=[]
-    var start = 0; 
-    for (var i=0; i<48; i++)
-    {
-        var slot = {"id": i+1, "start":start , "end": start+30}; 
-        slotsArr.push(slot); 
-        start = start+30; 
-    }
-    dates.forEach((date)=> {
-      var month= date.getMonth() +1; 
-      if(month <10) 
-      month = "0" + month;  
-      var day= date.getDate() +1; 
-      if(day <10) 
-      day = "0" + day; 
-      var slot = {"day": month + "/" + date.getDate() +  "/" + date.getFullYear() , "slots": slotsArr}
-      this.data.push(slot)
-    })
-    this.id = this.$route.params.id; 
-    }
+    toHoursAndMinutes(totalMinutes) {
+      var hours = Math.floor(totalMinutes / 60);
+      var minutes = totalMinutes % 60;
+      if (minutes < 10) {
+        minutes = "0" + minutes;
+      }
+      if (hours > 12) {
+        hours = Math.floor(hours / 12);
+        return hours + ":" + minutes + " PM";
+      }
+      if (hours < 10) {
+        return "0" + hours + ":" + minutes + " AM";
+      }
+      return hours + ":" + minutes + " AM";
+    },
+    getformattedDt(dt) {
+      if (dt == null) {
+        dt = new Date();
+      }
+      var dtMonth;
+      dt.getMonth() < 9
+        ? (dtMonth = "0" + (dt.getMonth() + 1))
+        : (dtMonth = dt.getMonth());
+      return dtMonth + "/" + dt.getDate() + "/" + dt.getFullYear();
+    },
   },
 };
 </script>
@@ -186,6 +160,8 @@ export default {
 .gridCointainer {
   display: grid;
   grid-template-columns: 30% 70%;
+  margin: 5px;
+  box-shadow: -2rem 0 3rem -2rem #000;
 }
 .timeslot {
   background: brown;
@@ -216,5 +192,15 @@ export default {
 
 .slot {
   display: flex;
+}
+
+.timeslots {
+  height: 90vh;
+  overflow: scroll;
+  box-shadow: -2rem 0 3rem -2rem #000;
+}
+
+.taskList {
+  box-shadow: -2rem 0 3rem -2rem #000;
 }
 </style>
