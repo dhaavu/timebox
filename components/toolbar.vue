@@ -1,46 +1,74 @@
 <template>
 
         <div class="toolbar">
-            <h3>Timeline</h3>
-            <div class="select">
+            <div class="pageDate">
+                <span class="material-symbols-outlined">arrow_back_ios</span>
+                <h4>
+                    {{dateInWords}}
+                </h4> 
+                <span class="material-symbols-outlined">arrow_forward_ios</span>
+            </div>
+            <!-- <div class="select">
                 <select v-model="selectedValue" @change="valueChanged" class="select" name="timelineOption" id="options">
                     <option value="Hourly">Hourly</option>
                     <option selected  value="30Min">30 Minutes</option>
                     <option value="15Min">15 Minutes</option>
                 </select>
-            </div>
+            </div> -->
         </div>
    
 </template>
-<script>
+<script>    
 export default {
     name:"toolbar", 
+    props: {
+        currentDate: String
+    }, 
     data() {
         return {
             selectedValue: "30Min"
         }
     },
     methods: {
-        valueChanged(){
-            console.log(this.selectedValue); 
-            console.log(this.$store.state.timeslot)
-            this.$store.commit('changeTimeslot', this.selectedValue); 
-            console.log(this.$store.state.timeslot)
-            this.$emit('timelineChanged'); 
-        }
+        // valueChanged(){
+        //     console.log(this.selectedValue); 
+        //     console.log(this.$store.state.timeslot)
+        //     this.$store.commit('changeTimeslot', this.selectedValue); 
+        //     console.log(this.$store.state.timeslot)
+        //     this.$emit('timelineChanged'); 
+        // }
     },
+    computed:{
+        dateInWords(){
+          var arr=  this.currentDate.split('/'); 
+          var dt = new Date(arr[2], arr[0]-1, arr[1])
+          return dt.toDateString(); 
+        }
+    }
 }
 </script>
 <style scoped>
     .toolbar{
         display: flex;
         justify-content: space-between;
+         box-shadow: -2rem 0 3rem -2rem #000;
+         background:rgb(0 0 0 / 20%); 
+         margin:5px; 
+         padding:5px 25px; 
+         gap:10px; 
     }
     .select{
         padding:10px; 
-        justify-self: right;
-        background: black; 
-        color:white;    
+        justify-self: right; 
+
+    }
+
+    .pageDate{
+        display: flex; 
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        flex-grow: 2;
     }
   
 </style>

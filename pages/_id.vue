@@ -7,12 +7,24 @@
         <div class="task">task 3</div>
       </div>
       <div class="container timeline">
+         <toolbar :currentDate="currentDate"  @timelineChanged="timelineChange"></toolbar>
         <div class="timeslots" v-if="pageData.length > 0">
-          <div
+          
+          <timeslot 
+          @timelineChange="timelineChange"
+           v-for="(slot, index) in pageData[0].slots"
+            :key="slot.id"
+            :id="slot.id"
+            :start="slot.start"
+            :end="slot.end"
+            :class="'slotContainer ' + 'scrollToslot' + index "
+            ref="scrollToslot"></timeslot>
+          
+          <!-- <div
             v-for="(slot, index) in pageData[0].slots"
             :key="slot.id"
             :id="slot.id"
-            class="slotContainer"
+            :class="'slotContainer ' + 'scrollToslot' + index "
             :ref="'scrollToslot' + index"
           >
             <div class="interval">
@@ -26,7 +38,7 @@
                 <span class="resize-plus"> + </span>
               </div>
             </div>
-          </div>
+          </div> -->
         </div>
         <div v-else>
           <h3>Date Not found </h3>
@@ -43,8 +55,9 @@
 import Sortable from "sortablejs";
 import timeline from "../components/timeline.vue";
 import { createClient } from "@supabase/supabase-js";
+import timeslot from '../components/timeslot.vue';
 export default {
-  components: { timeline },
+  components: { timeline, timeslot },
   name: "IndexPage",
 
   async fetch() {
@@ -68,9 +81,11 @@ export default {
       .select("*, slots(*)")
       .eq("name", currentDt)
       .order("start", { foreignTable: "slots", asc: true });
-    //   console.log(JSON.stringify(day), error);
+       console.log(JSON.stringify(day), error);
 
     this.pageData = day;
+    if(this.pageData.length > 0)
+    this.currentDate = this.pageData[0].name
   },
 
   mounted() {
@@ -78,25 +93,22 @@ export default {
       this.$router.push("/notfound/404");
     } else {
       var el = this.$refs.draggableContainer1;
+      console.log(el); 
       var sortable = Sortable.create(el, { group: "hello" });
-      var el2 = this.$refs.draggableContainer2;
-      //console.log(el2);
-      if (el2) {
-        el2.forEach((item) => {
-          Sortable.create(item, { group: "hello" });
-        });
-        var el3 = this.$refs.scrollToslot20[0];
-        el3.scrollIntoView({ block: "nearest", inline: "start" });
+      var el3 = this.$refs.scrollToslot[16].$el;
+      console.log(el3); 
+      
+      
+        el3.scrollIntoView({ block: "start", inline: "start" });
         console.log(el3);
         window.scrollTo(0, 0);
-      }
     }
   },
   data() {
     return {
       id: "",
       data: [{}],
-      today: "",
+      currentDate: "",
       pageData: [{}],
       dateNotFound: false,
       slots: [
@@ -124,8 +136,12 @@ export default {
     };
   },
   methods: {
-    timelineChange() {
-      console.log("Coming from the index page " + this.$store.state.timeslot);
+
+    timelineChange(data) {
+
+      console.log(data);
+      
+
     },
     toHoursAndMinutes(totalMinutes) {
       var hours = Math.floor(totalMinutes / 60);
@@ -164,14 +180,14 @@ export default {
   box-shadow: -2rem 0 3rem -2rem #000;
 }
 .timeslot {
-  background: brown;
+  background: #236486eb;
   padding: 10px;
   margin: 5px 0px;
   flex-grow: 1;
 }
 
 .task {
-  background: green;
+  background: #4c62ac;
   padding: 10px;
   margin: 5px 0px;
 }
@@ -197,10 +213,19 @@ export default {
 .timeslots {
   height: 90vh;
   overflow: scroll;
-  box-shadow: -2rem 0 3rem -2rem #000;
+  padding:10px; 
+  margin:10px 0px; 
 }
 
 .taskList {
   box-shadow: -2rem 0 3rem -2rem #000;
+}
+
+.interval{
+  padding-top:5px; 
+}
+
+.timeslot.task{
+  background:rgba(35,100,134,0.92157)
 }
 </style>

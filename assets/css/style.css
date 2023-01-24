@@ -1,5 +1,5 @@
 .container{
-    background-color: black; 
+    background-color: #0000003d; 
     padding:20px; 
     margin:5px; 
     color:white; 
@@ -7,12 +7,13 @@
   
   body{
     margin:0; 
-    background-color:rgb(69, 68, 68);
+    background:linear-gradient(#0f459c, #5e1200, #2853a6);
     color:white; 
+    font-family: 'Quicksand', cursive;
   }
   
   .task{
-    background:#005432; 
+    background:#4c62ac; 
     margin:10px; 
     padding:15px; 
   }
