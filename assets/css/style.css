@@ -17,3 +17,45 @@
     margin:10px; 
     padding:15px; 
   }
+
+  .flex{
+    display:flex; 
+  }
+
+  .justifyCenter{
+    justify-content: center;
+  }
+
+  .justifyRight{
+    justify-content: right;
+  }
+  .flexWrap{
+    flex-wrap: wrap;
+  }
+
+  .spaceAround{
+    justify-content: space-around;
+  }
+
+  .button{
+    padding:12px; 
+    background: maroon; 
+    color:white; 
+    box-shadow: none;
+    border: none;
+    min-width:200px; 
+  }
+
+  .button:hover{
+    background: rgb(209, 4, 4); 
+  }
+
+  .buttonCancel {
+    background: grey;
+  }
+
+  .buttonCancel:hover {
+    background: rgb(44, 44, 44);
+    color:white; 
+  }
+

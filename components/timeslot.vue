@@ -4,11 +4,12 @@
             <div class="interval">
               {{ toHoursAndMinutes(start) }} ({{start}}) -
               {{ toHoursAndMinutes(end) }} ({{end}})
+              ----{{currentMinutes}}
             </div>
-            <div class="slot">
-              <div ref="draggableContainer2" class="timeslot"  :class="outsideOfWorkHours"></div>
+            <div class="slot" :class="currenttimeclass" :style="{'min-height': minHeight}">
+              <div ref="draggableContainer2" class="timeslot"  :class="{'offWork':outsideOfWorkHours, 'current': currenttimeclass}"></div>
               <div class="controls">
-                <span class="resize-minus"> - </span>
+                <span class="resize-minus" @click="minus"> - </span>
                 <span class="resize-plus" @click="plus"> + </span>
               </div>
             </div>
@@ -25,9 +26,26 @@ export default {
             end:Number, 
             id:String
         }, 
+    data() {
+      return {
+        currentMinutes:0
+      }
+    },
     computed:{
       outsideOfWorkHours(){
-        return this.start < 480 || this.end > 1020 ? 'offWork' : ''
+        return this.start < 480 || this.end > 1020 ? true : false
+      }, 
+      minHeight(){
+        return (this.end-this.start)/30*62 + "px"
+      }, 
+      currenttimeclass(){
+        var dt =new Date(); 
+        var currentMinutes = (dt.getHours()*60) + (dt.getMinutes()); 
+        this.currentMinutes = currentMinutes; 
+        if( currentMinutes >=this.start && currentMinutes <= this.end-1 )
+        return true
+        else 
+        return false
       }
 
     }, 
@@ -57,7 +75,11 @@ export default {
     },
     plus(){
       var data = {id: this.id, start: this.start, end: this.end}
-      this.$emit('timelineChange', data); 
+      this.$emit('timelineChangePlus', data); 
+    }, 
+    minus(){
+      var data = {id: this.id, start: this.start, end: this.end}
+      this.$emit('timelineChangeMinus', data); 
     }
     }
 }
@@ -96,5 +118,8 @@ export default {
 }
 .offWork{
   background: grey;
+}
+.current{
+  border-left:15px solid brown; 
 }
 </style>

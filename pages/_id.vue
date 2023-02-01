@@ -1,17 +1,21 @@
 <template>
   <div>
     <div class="gridCointainer">
+     
       <div class="container taskList" ref="draggableContainer1">
-        <div class="task">task 1</div>
-        <div class="task">task 2</div>
-        <div class="task">task 3</div>
+        <taskbar></taskbar>
+        <task class="task" :title="'Need to get alignment from '" :status="'new'" :desc="'This is the first task'" :due="'01/31/2023'" :priority="'P1'"></task>
+        <task class="task" :title="'Need to get alignment from'" :status="'new'" :desc="'This is the first task'" :due="'01/31/2023'" :priority="'P1'"></task>
+        <task class="task" :title="'Need to get alignment from'" :status="'new'" :desc="'This is the first task'" :due="'01/31/2023'" :priority="'P1'"></task>
+        
       </div>
       <div class="container timeline">
-         <toolbar :currentDate="currentDate"  @timelineChanged="timelineChange"></toolbar>
+         <toolbar :currentDate="currentDate"  @timelineChanged="timelineChangePlus"></toolbar>
         <div class="timeslots" v-if="pageData.length > 0">
           
           <timeslot 
-          @timelineChange="timelineChange"
+          @timelineChangePlus="timelineChangePlus"
+          @timelineChangeMinus="timelineChangeMinus"
            v-for="(slot, index) in pageData[0].slots"
             :key="slot.id"
             :id="slot.id"
@@ -59,8 +63,11 @@ import timeslot from '../components/timeslot.vue';
 export default {
   components: { timeline, timeslot },
   name: "IndexPage",
-
+setup(){
+console.log('setup')
+}, 
   async fetch() {
+   // console.log('in fetch')
     var id = this.$route.params.id;
 
     if (id.length != 8 || id.match(/^[0-9]+$/) == null) {
@@ -89,6 +96,7 @@ export default {
   },
 
   mounted() {
+    //console.log('in mounted')
     if (this.dateNotFound == true) {
       this.$router.push("/notfound/404");
     } else {
@@ -108,7 +116,7 @@ export default {
     return {
       id: "",
       data: [{}],
-      currentDate: "",
+      currentDate: "01/01/1970",
       pageData: [{}],
       dateNotFound: false,
       slots: [
@@ -137,10 +145,72 @@ export default {
   },
   methods: {
 
-    timelineChange(data) {
-
+    timelineChangePlus(data) {
       console.log(data);
-      
+      var result = this.pageData[0].slots.findIndex(item => item.id === data.id );
+      if(result){
+        for(var i=result; i< this.pageData[0].slots.length; i++){
+          if(i==result){
+            this.pageData[0].slots[i].end+=30; 
+          }
+          else if(i== this.pageData[0].slots.length){
+            this.pageData[0].slots[i].start+=30;
+          }
+          else if(this.pageData[0].slots[i].end == 1440 ){
+            this.pageData[0].slots.pop(); 
+          break; 
+          }
+          
+          else{
+          this.pageData[0].slots[i].start+=30; 
+          
+          this.pageData[0].slots[i].end+=30; 
+          }
+  
+        }
+      }
+     // console.log(result)
+      console.log(this.pageData); 
+    },
+    timelineChangeMinus(data) {
+      if(data.end - data.start >30){
+         var result = this.pageData[0].slots.findIndex(item => item.id === data.id );
+        
+        for(var i=result; i< this.pageData[0].slots.length; i++){
+            if(i==result){
+              this.pageData[0].slots[i].end-=30; 
+            }
+            else {
+              this.pageData[0].slots[i].start-=30; 
+              this.pageData[0].slots[i].end-=30; 
+             
+            }
+            
+            
+        }
+        var newSlot = { id: '1', start:1410, end:1440}
+        this.pageData[0].slots.push(newSlot); 
+      }
+      var result = this.pageData[0].slots.findIndex(item => item.id === data.id );
+      // if(result){
+      //   for(var i=result; i>=0 ; i--){
+      //     if(i==result){
+      //       this.pageData[0].slots[i].end-=30; 
+      //     }
+      //     else if(i== this.pageData[0].slots.length){
+      //       this.pageData[0].slots[i].start-=30;
+      //     }
+      //     else if(this.pageData[0].slots[i].start == 0 )
+      //     break; 
+      //     else{
+      //     this.pageData[0].slots[i].start-=30; 
+          
+      //     this.pageData[0].slots[i].end-=30; 
+      //     }
+  
+      //   }
+      // }
+    
 
     },
     toHoursAndMinutes(totalMinutes) {
@@ -186,11 +256,7 @@ export default {
   flex-grow: 1;
 }
 
-.task {
-  background: #4c62ac;
-  padding: 10px;
-  margin: 5px 0px;
-}
+
 
 .controls {
   display: flex;
