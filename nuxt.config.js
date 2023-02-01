@@ -18,7 +18,8 @@ export default {
       {rel:"preconnect", href:"https://fonts.googleapis.com"}, 
       { rel:"preconnect" , href:"https://fonts.gstatic.com", crossorigin: true}, 
       {href:"https://fonts.googleapis.com/css2?family=Arizonia:wght@400&display=swap", rel: "stylesheet"},  
-      {href:"https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap", rel: "stylesheet"}
+      {href:"https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap", rel: "stylesheet"}, 
+      {href:"https://fonts.googleapis.com/css2?family=Allerta+Stencil", rel: "stylesheet"}
     
     ]
   },

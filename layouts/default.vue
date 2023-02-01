@@ -5,7 +5,7 @@
     <div class="logo">
       <span class="material-symbols-outlined">timer</span>
     </div>
-    <h1>Timebox</h1> 
+    <h1>Zenbox</h1> 
   </div>
 </nav>
   <Nuxt />
@@ -28,7 +28,7 @@
 }
 
 .brand h1{
-    font-family: 'Arizonia', cursive;
+    font-family: Allerta Stencil;
   font-size: 45px;
   margin:0; 
   font-weight: 100;
