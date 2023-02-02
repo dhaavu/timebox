@@ -66,9 +66,23 @@ export default {
 setup(){
 console.log('setup')
 }, 
-  async fetch() {
+  async mounted() {
    // console.log('in fetch')
-    var id = this.$route.params.id;
+    var id = ""
+
+    if(this.$route.params.id){
+      id = this.$route.params.id;
+    }
+    else{
+      var dt = new Date(); 
+    var mon = dt.getMonth() +1; 
+    var d = dt.getDate()
+     mon < 10 ? mon = '0' + mon : mon
+     d < 10  ? d = '0' + d : d
+    
+    console.log(mon, d); 
+    id = mon  + '' + d + '' + dt.getFullYear()
+    }
 
     if (id.length != 8 || id.match(/^[0-9]+$/) == null) {
       console.log("error");
@@ -95,8 +109,8 @@ console.log('setup')
     this.currentDate = this.pageData[0].name
   },
 
-  mounted() {
-    //console.log('in mounted')
+  updated() {
+    console.log('in updated')
     if (this.dateNotFound == true) {
       this.$router.push("/notfound/404");
     } else {
