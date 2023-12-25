@@ -1,9 +1,9 @@
 <template>
     <div>
         <div class="card">
-            <div class="title pointer"  @click="showDesc">
-                <h3>{{title}}</h3>
-                <span class="material-symbols-outlined pointer"> add</span>
+            <div class="title pointer" >
+                <h3  @click="showDesc" >{{title}}</h3>
+                <span @click="$emit('editTask', taskData)" class="material-symbols-outlined pointer"> edit</span>
             </div>
             <div class="holder" :class="{expand:expand}">
                 <div class="status">
@@ -30,6 +30,7 @@
 <script>
 export default {
     props:{
+        id:String, 
         title:String, 
         status:String, 
         desc:String, 
@@ -46,6 +47,18 @@ export default {
             this.expand = !this.expand
         }
     },
+    computed: {
+        taskData(){
+            return {
+                 title:this.title, 
+                status:this.status, 
+                description:this.desc, 
+                due:this.due, 
+                priority:this.priority, 
+                id:this.id
+            }
+        }
+    }
 }
 </script>
 
@@ -103,5 +116,9 @@ p{
 }
 .pointer{
     cursor: pointer;
+}
+
+.title h3{
+    flex-grow: 2;
 }
 </style>

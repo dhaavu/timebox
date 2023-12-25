@@ -2,11 +2,11 @@
 
         <div class="toolbar">
             <div class="pageDate">
-                <span class="material-symbols-outlined">arrow_back_ios</span>
+                <span @click="getDay('previous')" class="material-symbols-outlined">arrow_back_ios</span>
                 <h4>
                     {{dateInWords}}
                 </h4> 
-                <span class="material-symbols-outlined">arrow_forward_ios</span>
+                <span @click="getDay('next')" class="material-symbols-outlined">arrow_forward_ios</span>
             </div>
             <!-- <div class="select">
                 <select v-model="selectedValue" @change="valueChanged" class="select" name="timelineOption" id="options">
@@ -30,13 +30,26 @@ export default {
         }
     },
     methods: {
-        // valueChanged(){
-        //     console.log(this.selectedValue); 
-        //     console.log(this.$store.state.timeslot)
-        //     this.$store.commit('changeTimeslot', this.selectedValue); 
-        //     console.log(this.$store.state.timeslot)
-        //     this.$emit('timelineChanged'); 
-        // }
+        getDay(direction){
+           if(direction == 'next' ) {
+    
+            var nextDay = this.currentDate.substring(3,5); 
+            nextDay++; 
+            nextDay < 10 ? nextDay= '0' + nextDay : nextDay = nextDay
+            var dt = this.currentDate.substring(0,2) + nextDay + this.currentDate.substring(6,this.currentDate.length)
+         
+            this.$router.push('/' + dt); 
+           }
+           else if(direction == 'previous' ) {
+          
+            var nextDay = this.currentDate.substring(3,5); 
+            nextDay--; 
+            nextDay < 10 ? nextDay= '0' + nextDay : nextDay = nextDay
+            var dt = this.currentDate.substring(0,2) + nextDay + this.currentDate.substring(6,this.currentDate.length)
+      
+            this.$router.push('/' + dt); 
+           }
+        }
     },
     computed:{
         dateInWords(){

@@ -1,13 +1,25 @@
 <template>
   <div>
+    <div class="error" v-if="errorOnPage" @click="closeError">
+     <div>
+      <h3>Error Occured!!!!</h3>
+      <p>{{error}}</p>
+     </div> 
+       <span class="material-symbols-outlined pointer close pointer">
+          close
+      </span>
+    </div>
     <div class="gridCointainer">
      
       <div class="container taskList" ref="draggableContainer1">
         <taskbar></taskbar>
-        <task class="task" :title="'Need to get alignment from '" :status="'new'" :desc="'This is the first task'" :due="'01/31/2023'" :priority="'P1'"></task>
-        <task class="task" :title="'Need to get alignment from'" :status="'new'" :desc="'This is the first task'" :due="'01/31/2023'" :priority="'P1'"></task>
-        <task class="task" :title="'Need to get alignment from'" :status="'new'" :desc="'This is the first task'" :due="'01/31/2023'" :priority="'P1'"></task>
-        
+        <addTask :data="editTaskData" :modal="editModal" @close="closeModal"></addTask>
+        <task v-for="task in tasks" 
+        :key="task.id" 
+        class="task" 
+        @editTask="editTask"
+        :id="task.id" :title="task.title" :status="task.status" :desc="task.description" :due="task.due" :priority="task.priority"></task>
+ 
       </div>
       <div class="container timeline">
          <toolbar :currentDate="currentDate"  @timelineChanged="timelineChangePlus"></toolbar>
@@ -23,36 +35,25 @@
             :end="slot.end"
             :class="'slotContainer ' + 'scrollToslot' + index "
             ref="scrollToslot"></timeslot>
-          
-          <!-- <div
-            v-for="(slot, index) in pageData[0].slots"
-            :key="slot.id"
-            :id="slot.id"
-            :class="'slotContainer ' + 'scrollToslot' + index "
-            :ref="'scrollToslot' + index"
-          >
-            <div class="interval">
-              {{ toHoursAndMinutes(slot.start) }} -
-              {{ toHoursAndMinutes(slot.end) }}
-            </div>
-            <div class="slot">
-              <div ref="draggableContainer2" class="timeslot"></div>
-              <div class="controls">
-                <span class="resize-minus"> - </span>
-                <span class="resize-plus"> + </span>
-              </div>
-            </div>
-          </div> -->
+
         </div>
         <div v-else>
-          <h3>Date Not found </h3>
+          <div class="container justifyCenter flex">
+            <button v-if="!generatingData" @click="generateSlots" class="button">
+              Plan my Day
+            </button>
+            <div v-if="generatingData" class="loader" style="display:block">
+                <div class="lds-ripple"><div></div><div></div></div>
+                <h3> Building the slots.....</h3>
+            </div>
+          </div>
+         
           
         </div>
       </div>
     </div>
   </div>
-  <!-- <div class="console"></div>
-  </div> -->
+
 </template>
 
 <script>
@@ -63,67 +64,35 @@ import timeslot from '../components/timeslot.vue';
 export default {
   components: { timeline, timeslot },
   name: "IndexPage",
-setup(){
-console.log('setup')
-}, 
+
   async mounted() {
-   // console.log('in fetch')
-    var id = ""
-
-    if(this.$route.params.id){
-      id = this.$route.params.id;
-    }
-    else{
-      var dt = new Date(); 
-    var mon = dt.getMonth() +1; 
-    var d = dt.getDate()
-     mon < 10 ? mon = '0' + mon : mon
-     d < 10  ? d = '0' + d : d
-    
-    console.log(mon, d); 
-    id = mon  + '' + d + '' + dt.getFullYear()
-    }
-
-    if (id.length != 8 || id.match(/^[0-9]+$/) == null) {
-      console.log("error");
-      this.dateNotFound = true;
-    }
-
-    var currentDt =
-      id.substring(0, 2) + "/" + id.substring(2, 4) + "/" + id.substring(4, 8);
-    //  var currentDt = this.getformattedDt(new Date());
-    //  console.log(currentDt)
-    const supabase = createClient(
-      "https://ssviefrcxhjtuosoevlf.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzdmllZnJjeGhqdHVvc29ldmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzQyMzAxMzQsImV4cCI6MTk4OTgwNjEzNH0.eeQUivtYPSd__AgkywoS18N8KiDAD1Jr3jq_P8xIXTc"
-    );
-    const { data: day, error } = await supabase
-      .from("day")
-      .select("*, slots(*)")
-      .eq("name", currentDt)
-      .order("start", { foreignTable: "slots", asc: true });
-       console.log(JSON.stringify(day), error);
-
-    this.pageData = day;
-    if(this.pageData.length > 0)
-    this.currentDate = this.pageData[0].name
+    this.getTasks(); 
+    this.getData(); 
   },
 
   updated() {
-    console.log('in updated')
+   // console.log('in updated')
     if (this.dateNotFound == true) {
       this.$router.push("/notfound/404");
-    } else {
+    } 
+    else if(this.pageData.length > 0) {
+      
+     // console.log("page Data"); 
+     // console.log(this.pageData); 
+
       var el = this.$refs.draggableContainer1;
-      console.log(el); 
+  //    console.log(el); 
       var sortable = Sortable.create(el, { group: "hello" });
-      var el3 = this.$refs.scrollToslot[16].$el;
-      console.log(el3); 
+      if(this.$refs.scrollToslot){
+         var el3 = this.$refs.scrollToslot[16].$el;
+  //      console.log(el3); 
       
       
         el3.scrollIntoView({ block: "start", inline: "start" });
-        console.log(el3);
+    //    console.log(el3);
         window.scrollTo(0, 0);
+      }
+     
     }
   },
   data() {
@@ -133,34 +102,71 @@ console.log('setup')
       currentDate: "01/01/1970",
       pageData: [{}],
       dateNotFound: false,
-      slots: [
-        {
-          id: "1",
-          start: "8:00",
-          end: "9:00",
-        },
-        {
-          id: "2",
-          start: "9:00",
-          end: "10:00",
-        },
-        {
-          id: "3",
-          start: "10:00",
-          end: "11:00",
-        },
-        {
-          id: "4",
-          start: "11:00",
-          end: "12:00",
-        },
-      ],
+      tasks: [],
+      generatingData: false, 
+      editModal: true, 
+      editTaskData: {title: "", 
+      description: "", 
+      due: "", 
+      priority: "", 
+      status:"", 
+      id: "" }, 
+      errorOnPage: false, 
+      error: 'could not connect to database'
+      
     };
   },
   methods: {
+    closeModal(refreshdata){
+      this.editModal=true; 
+      console.log("refreshData: " + refreshdata); 
+      if(refreshdata){
+        this.getTasks(); 
+      }
+    }, 
+    closeError(){
+      this.errorOnPage = false; 
+    }, 
+    editTask(data){
+      // this.$store.commit('updateTaskData', data); 
+      // this.$store.commit('updateModal', false)
+      console.log(data)
+      this.editTaskData = data; 
+      this.editModal = false; 
+    }, 
+   async  generateSlots(){
+      this.generatingData = true; 
+      var slotsArr = [];
+      var start = 0;
+      for (var i = 0; i < 48; i++) {
+        var slot = { id: i + 1, start: start, end: start + 30 };
+        slotsArr.push(slot);
+        start = start + 30;
+      }
+      var generateData= {day: this.currentDate, slots: slotsArr}
+      const supabase = createClient(
+      "https://ssviefrcxhjtuosoevlf.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzdmllZnJjeGhqdHVvc29ldmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzQyMzAxMzQsImV4cCI6MTk4OTgwNjEzNH0.eeQUivtYPSd__AgkywoS18N8KiDAD1Jr3jq_P8xIXTc"
+    );
+    //   const supabase = createClient(
+    //   process.env.DATABASE_URL,
+    //   process.env.DATABASE_KEY
+    // );
+        const { data: day, error } = await supabase
+        .from("day")
+        .insert({ name: generateData.day })
+        .select('*');
+        for (var slot in generateData.slots) {
+            const { data, error } = await supabase 
+        .from("slots")
+        .insert({day_id:day[0].id, start: generateData.slots[slot].start, end: generateData.slots[slot].end })
+        }
+      this.getData(); 
+      this.generatingData = false; 
 
+    }, 
     timelineChangePlus(data) {
-      console.log(data);
+   //   console.log(data);
       var result = this.pageData[0].slots.findIndex(item => item.id === data.id );
       if(result){
         for(var i=result; i< this.pageData[0].slots.length; i++){
@@ -184,7 +190,7 @@ console.log('setup')
         }
       }
      // console.log(result)
-      console.log(this.pageData); 
+     // console.log(this.pageData); 
     },
     timelineChangeMinus(data) {
       if(data.end - data.start >30){
@@ -252,6 +258,90 @@ console.log('setup')
         : (dtMonth = dt.getMonth());
       return dtMonth + "/" + dt.getDate() + "/" + dt.getFullYear();
     },
+    async getData(){
+      var id = ""
+
+    if(this.$route.params.id){
+      id = this.$route.params.id;
+    }
+    else{
+      var dt = new Date(); 
+    var mon = dt.getMonth() +1; 
+    var d = dt.getDate()
+     mon < 10 ? mon = '0' + mon : mon
+     d < 10  ? d = '0' + d : d
+    
+   // console.log(mon, d); 
+    id = mon  + '' + d + '' + dt.getFullYear()
+    }
+
+    if (id.length != 8 || id.match(/^[0-9]+$/) == null) {
+      console.log("error");
+      this.dateNotFound = true;
+    }
+
+    var currentDt =
+      id.substring(0, 2) + "/" + id.substring(2, 4) + "/" + id.substring(4, 8);
+    const supabase = createClient(
+      "https://ssviefrcxhjtuosoevlf.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzdmllZnJjeGhqdHVvc29ldmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzQyMzAxMzQsImV4cCI6MTk4OTgwNjEzNH0.eeQUivtYPSd__AgkywoS18N8KiDAD1Jr3jq_P8xIXTc"
+    );
+    // const supabase = createClient(
+    //   process.env.DATABASE_URL,
+    //   process.env.DATABASE_KEY
+    // );
+    const { data: day, error } = await supabase
+      .from("day")
+      .select("*, slots(*)")
+      .eq("name", currentDt)
+      .order("start", { foreignTable: "slots", asc: true });
+  if(error)
+  {
+       console.log(JSON.stringify(day), error);
+       this.$router.push("/notfound/error")
+
+  }
+ 
+  else {
+    this.pageData = day;
+    if(this.pageData.length > 0)
+    this.currentDate = this.pageData[0].name
+    else this.currentDate = currentDt; 
+  }
+    
+    }, 
+    async getTasks(){
+      console.log('Fetching tasks ......')
+      try{
+        const supabase = createClient(
+        "https://ssviefrcxhjtuosoevlf.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzdmllZnJjeGhqdHVvc29ldmxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzQyMzAxMzQsImV4cCI6MTk4OTgwNjEzNH0.eeQUivtYPSd__AgkywoS18N8KiDAD1Jr3jq_P8xIXTc"
+      );
+    //    const supabase = createClient(
+    //   process.env.DATABASE_URL,
+    //   process.env.DATABASE_KEY
+    // );
+    console.log("Supabase Initialized ..."); 
+    console.log(supabase)
+      const { data: tasks, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("done", false)
+      .order("due", { asc: true });
+      console.log("Error in query ")
+      console.log(error); 
+      console.log("Task List")
+      console.log(tasks)
+
+      this.tasks = tasks;
+      }
+      catch(e){
+        console.log("************* Error ***********")
+        console.log(e); 
+        console.log("************* Error - End  ***********")
+      }     
+
+    }
   },
 };
 </script>
@@ -307,5 +397,19 @@ console.log('setup')
 
 .timeslot.task{
   background:rgba(35,100,134,0.92157)
+}
+
+.error{
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+  flex-wrap: wrap;
+  background: rgba(163, 6, 6, 0.642); 
+  margin:3px 0px; 
+  padding:10px; 
+}
+
+.error span{
+  margin:18px; 
 }
 </style>

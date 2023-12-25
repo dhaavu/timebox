@@ -6,24 +6,36 @@
           </div>
          <span class="material-symbols-outlined pointer add" @click="addTask"> add</span>
         </div>
-        <addTask :modal="modal" @closeModal="modal=true"></addTask>
+        <addTask :data="newTaskData" :modal="newModal" @close="newModal=true"></addTask>
+     
     </div>
 </template>
 <script>
 import addTask from './addTask.vue';
 export default {
   components: { addTask },
-    data() {
-        return {
-            modal:true
-        }
-    },  
+  data() {
+    return {
+        newModal: true, 
+        newTaskData: {title: "", 
+      description: "", 
+      due: "", 
+      priority: "", 
+      status:"", 
+      id: "" }
+    }
+  }, 
     methods: {
         addTask(){
-            this.modal=false; 
+            this.newModal = false; 
+            // this.$store.commit('updateTaskData', {id:'', title:'', description:'', due:'', status:'new', priority:'P4'} )
+            // this.$store.commit('updateModal', false)
 
         }
     },
+    computed: {
+
+    }
 }
 </script>
 <style scoped>
